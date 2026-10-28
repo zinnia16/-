@@ -1,0 +1,2170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!--
+        ============================================================
+        家庭绿植养护 Agent 首页
+        技术：HTML + CSS + 原生 JavaScript（无后端、无数据库、无框架）
+        作者注释风格：面向大一同学，每一步都解释"为什么这么写"
+        ============================================================
+
+        【图片文件说明】
+        请把下面 3 张图片放在和本文件（index.html）同一个文件夹里：
+          open.png   —— 虚拟形象"睁眼"的样子（默认显示）
+          blink.png  —— 虚拟形象"眨眼/闭眼"的样子（鼠标移入时先切换）
+          smile.png  —— 虚拟形象"微笑"的样子（移入 0.3 秒后切换）
+    -->
+
+    <!-- 声明文档类型和字符编码，保证中文不乱码 -->
+    <meta charset="UTF-8">
+    <!-- viewport：让页面在手机上也能正常自适应显示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绿小植 · 家庭绿植养护 Agent</title>
+
+    <style>
+        /* ============================================================
+           第 1 部分：CSS 变量（统一管理颜色，改一处全站生效）
+           ============================================================ */
+        :root {
+            --green-dark:   #2f6b4f;   /* 深绿：标题、导航 */
+            --green-main:   #4caf7d;   /* 主绿：按钮、高亮 */
+            --green-light:  #e8f5ee;   /* 浅绿：区块背景 */
+            --bg:           #f6faf5;   /* 页面底色（淡淡的绿白） */
+            --card-bg:      #ffffff;   /* 卡片底色 */
+            --text:         #2d3a2e;   /* 正文文字颜色 */
+            --text-gray:    #6b7a6e;   /* 次要文字（灰色） */
+            --shadow:       0 6px 20px rgba(47, 107, 79, 0.12); /* 普通阴影 */
+            --shadow-hover: 0 16px 32px rgba(47, 107, 79, 0.20);/* 悬浮时更深的阴影 */
+            --radius:       16px;      /* 圆角大小 */
+        }
+
+        /* ============================================================
+           第 2 部分：基础样式（清除浏览器默认边距）
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* 让 width 包含 padding 和 border，计算尺寸更直观 */
+        }
+
+        html {
+            scroll-behavior: smooth; /* 点击导航锚点时，页面平滑滚动（不加这行会瞬间跳转） */
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif; /* 中文友好字体 */
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.7; /* 行高大一点，读起来舒服 */
+        }
+
+        /* 统一给每个大区块设置"锚点偏移"：
+           因为导航栏是固定在顶部的，直接跳转会把标题盖住，
+           scroll-margin-top 让跳转目标往下留出导航栏的高度 */
+        section {
+            scroll-margin-top: 90px;
+        }
+
+        /* ============================================================
+           第 3 部分：导航栏
+           ============================================================ */
+        .navbar {
+            position: fixed;      /* 固定在浏览器窗口顶部 */
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 6%;
+            background: rgba(255, 255, 255, 0.92); /* 半透明白色 */
+            backdrop-filter: blur(10px);            /* 毛玻璃效果 */
+            box-shadow: 0 2px 12px rgba(47, 107, 79, 0.08);
+            z-index: 1000; /* 保证导航栏永远盖在其他内容上面 */
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--green-dark);
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 999px;               /* 胶囊形圆角 */
+            color: var(--text);
+            text-decoration: none;              /* 去掉链接下划线 */
+            font-size: 15px;
+            transition: background-color 0.25s, color 0.25s; /* 过渡动画写在 a 上 */
+        }
+
+        .nav-links a:hover {
+            background-color: var(--green-main);
+            color: #fff;
+        }
+
+        /* ============================================================
+           第 4 部分：首页 Hero 区（左边文字 + 右边虚拟形象）
+           ============================================================ */
+        .hero {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 130px 6% 60px; /* 顶部留出导航栏的高度，不然内容会被挡住 */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+            flex-wrap: wrap; /* 窄屏时自动换行，左边文字换到上面 */
+        }
+
+        .hero-text {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .hero-text h1 {
+            font-size: 40px;
+            color: var(--green-dark);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .hero-text .slogan {
+            font-size: 18px;
+            color: var(--text-gray);
+            margin-bottom: 30px;
+        }
+
+        /* ---------- 语音模块 ---------- */
+        .voice-panel {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            box-shadow: var(--shadow);
+            max-width: 460px;
+        }
+
+        .voice-panel h2 {
+            font-size: 18px;
+            color: var(--green-dark);
+            margin-bottom: 14px;
+        }
+
+        /* 下拉框样式 */
+        .voice-panel select {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 15px;
+            border: 2px solid var(--green-light);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--text);
+            outline: none;                /* 去掉默认的蓝色聚焦框 */
+            cursor: pointer;
+            margin-bottom: 14px;
+            transition: border-color 0.25s;
+        }
+
+        .voice-panel select:focus {
+            border-color: var(--green-main); /* 获得焦点时边框变绿 */
+        }
+
+        .voice-btns {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .voice-btns button {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 10px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background: var(--green-main);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
+        }
+
+        .voice-btns button:hover {
+            background: var(--green-dark);
+            transform: translateY(-2px);      /* 按钮轻微上浮 */
+            box-shadow: var(--shadow);
+        }
+
+        .voice-btns button:active {
+            transform: translateY(0);          /* 按下时回到原位，产生"按压感" */
+        }
+
+        /* ---------- 定时自动播报控制条 ---------- */
+        .broadcast-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .broadcast-row label {
+            white-space: nowrap; /* 文字不要换行，"播报间隔（秒）"保持一行 */
+        }
+
+        /* 间隔时间输入框（只能填数字） */
+        .broadcast-row input {
+            width: 90px;
+            padding: 8px 10px;
+            font-size: 15px;
+            text-align: center;
+            border: 2px solid var(--green-light);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        .broadcast-row input:focus {
+            border-color: var(--green-main);
+        }
+
+        /* 开启 / 关闭播报的开关按钮 */
+        .broadcast-toggle {
+            flex: 1;
+            padding: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background: var(--green-dark);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.25s, transform 0.2s;
+        }
+
+        .broadcast-toggle:hover {
+            background: var(--green-main);
+            transform: translateY(-2px);
+        }
+
+        /* 播报状态提示文字 */
+        .broadcast-status {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        /* ---------- 可互动桌宠（VRM 风格虚拟形象） ---------- */
+        /*
+           ★★★ 为什么动作能"丝滑连贯"而不卡？—— 分层动画大法 ★★★
+           人物外面套了 7 层 <div>，每层"只管一种运动"：
+             #pet        → 跟着鼠标走（位置移动）
+             .pet-carry  → 被提起来时的左右倾斜（用移动速度实时算角度）
+             .pet-pose   → 姿态：歪头看人、坐下前倾（类名 + transition 切换）
+             .pet-squash → 弹性：跳起 / 落地的压扁拉伸（一次性动画）
+             .pet-sway   → 坐下时晃小腿（循环动画）
+             .pet-float  → 平时悬浮呼吸（循环动画，一直在动）
+             .pet-wiggle → 被摸、打招呼的摇摆（一次性动画）
+           每层只写自己的 transform，互不覆盖、自动叠加，
+           所以动作之间是平滑过渡，绝不是一帧一帧切换图片的 PPT 效果。
+        */
+        .hero-avatar {
+            text-align: center;
+        }
+
+        /* 舞台：桌宠活动的范围（普通模式下就是右侧头像区域） */
+        .pet-stage {
+            position: relative;               /* 给内部的 .pet 当定位基准 */
+            width: 320px;
+            height: 400px;
+            margin: 0 auto;
+        }
+
+        /* 第 1 层：桌宠本体 —— 只负责"位置"，用 JS 设置 translate3d */
+        .pet {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 260px;
+            /* 用 translate3d 走"显卡加速通道"，比改 left/top 更流畅 */
+            will-change: transform;
+        }
+
+        /* 第 2 层：被提起来时的倾斜（JS 实时写 rotate） */
+        .pet-carry {
+            width: 100%;
+            height: 100%;
+            will-change: transform;
+        }
+
+        /* 第 3 层：姿态（歪头 / 坐下）—— 用类名切换 + 过渡动画 */
+        .pet-pose {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.34, 1.3, 0.64, 1); /* 带一点回弹感 */
+        }
+
+        /* 姿态：歪头看屏幕外的你（图二效果） */
+        .pet-pose.is-tilt {
+            transform: rotate(-9deg);
+        }
+
+        /* 姿态：坐在边沿时微微前倾（图五效果） */
+        .pet-pose.is-sitting {
+            transform: rotate(-2deg) translateY(4px);
+        }
+
+        /* 姿态：施展魔法时缓缓升空（图八效果）
+           —— 与上面共用同一条 0.5s 过渡曲线，升起 / 落下都很顺滑 */
+        .pet-pose.is-magic-levitate {
+            transform: translateY(-22px) scale(1.04);
+        }
+
+        /* 第 4 层：弹性压扁拉伸（跳起 / 落地 / 伸懒腰） */
+        .pet-squash {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 第 5 层：坐下时晃小腿（只有 .is-sitting 时才启动循环动画） */
+        .pet-sway {
+            width: 100%;
+            height: 100%;
+        }
+
+        .pet-sway.is-sitting {
+            animation: petSway 2.2s ease-in-out infinite; /* 来回晃 */
+        }
+
+        /* 第 6 层：平时的悬浮呼吸（一直都在动，人物才"活着"） */
+        .pet-float {
+            width: 100%;
+            height: 100%;
+            animation: petFloat 3.2s ease-in-out infinite;
+        }
+
+        /* 第 7 层：摇摆（被摸头、打招呼时的一次性动画） */
+        .pet-wiggle {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ---------- 关键帧动画 ---------- */
+        @keyframes petFloat {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-9px); }  /* 轻轻飘起来 */
+        }
+
+        @keyframes petSway {
+            0%, 100% { transform: rotate(-2.5deg); }   /* 像坐在桌沿晃腿 */
+            50%      { transform: rotate(2.5deg); }
+        }
+
+        @keyframes petWiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25%      { transform: rotate(-7deg); }
+            50%      { transform: rotate(7deg); }
+            75%      { transform: rotate(-4deg); }
+        }
+
+        @keyframes petSquash {
+            0%   { transform: scale(1, 1); }
+            35%  { transform: scale(1.12, 0.88); }     /* 落地压扁 */
+            65%  { transform: scale(0.92, 1.1); }      /* 弹起拉伸 */
+            100% { transform: scale(1, 1); }
+        }
+
+        @keyframes petJump {
+            0%   { transform: translateY(0) scale(1, 1); }
+            30%  { transform: translateY(-34px) scale(0.94, 1.08); } /* 起跳 */
+            55%  { transform: translateY(-38px) scale(1, 1); }
+            85%  { transform: translateY(0) scale(1.1, 0.9); }      /* 落地压一下 */
+            100% { transform: translateY(0) scale(1, 1); }
+        }
+
+        /* ---------- 人物"立牌"（亚克力立牌风格，参考图七） ---------- */
+        .pet-face {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 28px;
+            overflow: hidden;
+            background: linear-gradient(160deg, #eef7f2, #dcefe6);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            box-shadow: var(--shadow-hover);
+            cursor: grab;                     /* 抓手光标：提示"可以抓起来" */
+            user-select: none;                /* 拖动时不要选中文字 */
+        }
+
+        .pet.is-dragging .pet-face {
+            cursor: grabbing;
+            box-shadow: 0 22px 44px rgba(47, 107, 79, 0.28); /* 提起来阴影变大 */
+        }
+
+        /* 四张表情图叠在一起，用透明度"淡入淡出"切换 —— 比换 src 更顺滑 */
+        .pet-face img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;                       /* 默认全透明 */
+            transition: opacity 0.22s ease;   /* 切换表情 = 平滑淡变 */
+            pointer-events: none;             /* 图片不挡鼠标事件，拖拽才正常 */
+            -webkit-user-drag: none;
+        }
+
+        .pet-face img.show {
+            opacity: 1;                       /* 加上 show 类的那张显示出来 */
+        }
+
+        /* 魔法立绘（图八）：大动作换装用更长的淡变，衔接才不突兀；
+           object-position 微调让"人物 + 光环"正好落在立牌中央 */
+        .pet-face img#faceMagic {
+            object-position: center 40%;
+            transition: opacity 0.45s ease;
+        }
+
+        /* 魔法特效：施法时立牌持续柔光呼吸（JS 播完会移除类名停掉） */
+        .pet-face.is-magic {
+            animation: petMagic 1.1s ease-in-out infinite;
+        }
+
+        @keyframes petMagic {
+            0%, 100% { box-shadow: var(--shadow-hover); }
+            50%      { box-shadow: 0 0 42px rgba(120, 220, 170, 0.85); }
+        }
+
+        /* ---------- 一次性动作（JS 加类名触发，播完自动移除） ----------
+           用法：元素.classList.add('anim-wiggle') 播放一次，
+                 动画结束后 JS 再 remove 掉，下次才能重复播放 */
+        .anim-wiggle { animation: petWiggle 0.65s ease-in-out; }
+        .anim-shake  { animation: petWiggle 0.45s ease-in-out; } /* 快速摇头 */
+        .anim-squash { animation: petSquash 0.55s ease-in-out; } /* 落地弹性 */
+        .anim-jump   { animation: petJump 0.8s ease-in-out; }    /* 跳一下 */
+
+        /* ---------- 白色对话框（图一效果） ---------- */
+        .pet-bubble {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 12px);        /* 出现在头顶上方 */
+            transform: translateX(-50%) scale(0.75);
+            transform-origin: bottom center;
+            max-width: 230px;
+            padding: 12px 18px;
+            background: #ffffff;
+            color: #3a3a3a;
+            font-size: 15px;
+            font-weight: bold;
+            line-height: 1.5;
+            text-align: center;
+            border: 2px solid #e2e2e2;        /* 参考图：白底 + 浅灰描边 */
+            border-radius: 18px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;             /* 气泡不挡鼠标 */
+            z-index: 5;
+        }
+
+        .pet-bubble.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1); /* 弹出来 */
+        }
+
+        /* 对话框下面的小三角尾巴 */
+        .pet-bubble::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -9px;
+            transform: translateX(-50%);
+            border: 9px solid transparent;
+            border-top-color: #ffffff;
+            border-bottom: none;
+        }
+
+        /* ---------- 特效粒子层（爱心 / 星星） ---------- */
+        .pet-particles {
+            position: absolute;
+            inset: 0;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 6;
+        }
+
+        /* 爱心：从人物身上飘起来 */
+        .fx-heart {
+            position: absolute;
+            font-size: 22px;
+            animation: fxFly 1.5s ease-out forwards; /* forwards = 结束后停在终点 */
+        }
+
+        @keyframes fxFly {
+            0%   { opacity: 0; transform: translateY(6px) scale(0.4); }
+            25%  { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-95px) scale(1.2) rotate(12deg); }
+        }
+
+        /* 星星：魔法施放时向四周飞散（--dx / --dy 是自定义变量，JS 生成时随机填） */
+        .fx-spark {
+            position: absolute;
+            font-size: 20px;
+            animation: fxSpark 1.1s ease-out forwards;
+        }
+
+        @keyframes fxSpark {
+            0%   { opacity: 0; transform: translate(0, 0) scale(0.3) rotate(0deg); }
+            20%  { opacity: 1; }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(160deg); }
+        }
+
+        /* ---------- 语音输入按钮 ---------- */
+        .mic-btn {
+            margin-top: 16px;
+            padding: 11px 26px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #fff;
+            background: var(--green-main);
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: background-color 0.25s, transform 0.2s;
+        }
+
+        .mic-btn:hover {
+            background: var(--green-dark);
+            transform: translateY(-2px);
+        }
+
+        /* 正在听你说话时：按钮轻轻"呼吸"发光 */
+        .mic-btn.is-listening {
+            background: #e2574c;
+            animation: micPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(226, 87, 76, 0.5); }
+            50%      { box-shadow: 0 0 0 12px rgba(226, 87, 76, 0); }
+        }
+
+        .pet-hint {
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        /* ============================================================
+           第 5 部分：通用区块样式（标题 + 内容容器）
+           ============================================================ */
+        .section-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 60px 6%;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 30px;
+            color: var(--green-dark);
+            margin-bottom: 8px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-gray);
+            margin-bottom: 36px;
+            font-size: 15px;
+        }
+
+        .bg-green  { background: var(--green-light); } /* 浅绿背景区块 */
+        .bg-white  { background: #fff; }
+
+        /* ============================================================
+           第 6 部分：传感器台账（表格）
+           ============================================================ */
+        .table-wrap {
+            overflow-x: auto; /* 表格太宽时出现横向滚动条，不会把页面撑坏 */
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            background: var(--card-bg);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse; /* 合并相邻单元格的边框 */
+            min-width: 640px;
+        }
+
+        thead th {
+            background: var(--green-dark);
+            color: #fff;
+            padding: 14px 16px;
+            font-size: 15px;
+            text-align: left;
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--green-light);
+            font-size: 15px;
+        }
+
+        tbody tr:hover {
+            background-color: var(--green-light); /* 鼠标悬浮整行变浅绿 */
+        }
+
+        /* 状态徽章（小圆角标签） */
+        .badge {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .badge-ok   { background: #e3f6ea; color: #2e9e5b; } /* 正常 */
+        .badge-high { background: #fff3e0; color: #e08a2e; } /* 偏高 */
+        .badge-low  { background: #fde7e7; color: #d9534f; } /* 偏低 */
+
+        /* ============================================================
+           第 7 部分：养护诊断（下拉选症状 + 一键诊断）
+           ============================================================ */
+        .diagnosis-box {
+            max-width: 640px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .diagnosis-box select {
+            width: 100%;
+            padding: 11px 12px;
+            font-size: 15px;
+            border: 2px solid var(--green-light);
+            border-radius: 10px;
+            outline: none;
+            cursor: pointer;
+            margin-bottom: 14px;
+            background: #fff;
+        }
+
+        .diagnosis-box select:focus {
+            border-color: var(--green-main);
+        }
+
+        .diagnosis-box button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            background: var(--green-main);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.25s, transform 0.2s;
+        }
+
+        .diagnosis-box button:hover {
+            background: var(--green-dark);
+            transform: translateY(-2px);
+        }
+
+        /* 诊断结果显示区域（默认先藏起来） */
+        .diagnosis-result {
+            margin-top: 18px;
+            padding: 16px 18px;
+            background: var(--green-light);
+            border-left: 5px solid var(--green-main); /* 左侧一条绿色竖线做装饰 */
+            border-radius: 8px;
+            font-size: 15px;
+            display: none; /* 一开始不显示，点按钮后用 JS 显示 */
+        }
+
+        /* ============================================================
+           第 8 部分：绿植卡片列表（重点：悬浮上浮效果）
+           ============================================================ */
+        .plant-grid {
+            display: grid;
+            /* repeat(auto-fit, minmax(250px, 1fr))
+               = 自动换列：每张卡最少 250px 宽，尽量平分剩余空间
+               这样不用写媒体查询也能自适应手机 / 平板 / 电脑 */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .plant-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+
+            /* ---- 悬浮上浮的核心：transition ----
+               transform 负责"移动"，box-shadow 负责"阴影加深"，
+               两个都写进 transition，鼠标进出就会有平滑动画（0.3 秒） */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* 鼠标悬浮在卡片上时：向上移动 8px + 阴影变大 */
+        .plant-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .plant-emoji {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: var(--green-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            margin-bottom: 14px;
+        }
+
+        .plant-card h3 {
+            font-size: 19px;
+            color: var(--green-dark);
+            margin-bottom: 6px;
+        }
+
+        .plant-card p {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 14px;
+            min-height: 66px; /* 让每张卡片的描述高度尽量一致，看起来整齐 */
+        }
+
+        .plant-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--green-light);
+            color: var(--green-dark);
+        }
+
+        /* ============================================================
+           第 9 部分：页脚
+           ============================================================ */
+        footer {
+            text-align: center;
+            padding: 28px 6%;
+            background: var(--green-dark);
+            color: #d8ece1;
+            font-size: 14px;
+        }
+
+        /* ============================================================
+           第 10 部分：挂件模式（body 上加 widget-mode 类后生效）
+           效果：只保留虚拟形象，其他全部隐藏，页面背景完全透明，
+                 适合配合"透明浏览器 / 桌面挂件工具"贴在桌面上用。
+           技巧：给 body 加一个类名，所有"挂件模式专属样式"都写成
+                 body.widget-mode xxx 的形式，类名一加就生效、一删就还原。
+           ============================================================ */
+
+        /* 导航栏上的"挂件模式"按钮 */
+        .widget-btn {
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 2px solid var(--green-main);
+            background: transparent;
+            color: var(--green-dark);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.25s, color 0.25s;
+        }
+
+        .widget-btn:hover {
+            background: var(--green-main);
+            color: #fff;
+        }
+
+        /* ---- 挂件模式下：隐藏所有其他内容 ----
+           （display:none = 直接不显示，连位置都不占）
+           注意：语音输入按钮 .mic-btn 和对话框要保留！
+                 这样桌宠在桌面上还能继续和你互动 */
+        body.widget-mode .navbar,
+        body.widget-mode .hero-text,
+        body.widget-mode #sensors,
+        body.widget-mode #diagnosis,
+        body.widget-mode #wiki,
+        body.widget-mode footer,
+        body.widget-mode .pet-hint {
+            display: none;
+        }
+
+        /* ---- 挂件模式下：页面背景透明 ----
+           html 和 body 都设为透明，才能真正"透出桌面" */
+        body.widget-mode {
+            background: transparent;
+        }
+
+        html.widget-mode {
+            background: transparent;
+        }
+
+        /* 挂件模式下：桌宠舞台铺满整个窗口（人物就能被拖到任意位置） */
+        body.widget-mode .hero {
+            padding: 0;
+            min-height: 100vh;
+            display: block;
+            max-width: none;
+        }
+
+        body.widget-mode .hero-avatar {
+            width: 100%;
+            height: 100vh;
+        }
+
+        body.widget-mode .pet-stage {
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* 挂件模式下：人物立牌去掉边框底色，更像悬浮桌宠 */
+        body.widget-mode .pet-face {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        /* 挂件模式下：语音按钮缩成小圆钮，放在左下角不碍事 */
+        body.widget-mode .mic-btn {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            margin: 0;
+            padding: 12px 16px;
+            opacity: 0.55;                    /* 半透明，不抢镜 */
+            transition: opacity 0.25s;
+        }
+
+        body.widget-mode .mic-btn:hover {
+            opacity: 1;
+        }
+
+        /* ---- 挂件模式专用的"退出"小按钮 ----
+           平时藏起来，进入挂件模式后才出现（半透明，不挡视线） */
+        .widget-exit-btn {
+            display: none;
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 2000;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(47, 107, 79, 0.55);
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.25s;
+        }
+
+        .widget-exit-btn:hover {
+            background: rgba(47, 107, 79, 0.9);
+        }
+
+        /* 挂件模式下才显示退出按钮 */
+        body.widget-mode .widget-exit-btn {
+            display: block;
+        }
+
+        /* ============================================================
+           第 11 部分：小屏适配（手机上略微缩小标题和桌宠）
+           ============================================================ */
+        @media (max-width: 600px) {
+            .hero-text h1 { font-size: 30px; }
+            .pet-stage { width: 260px; height: 330px; }
+            .pet { width: 180px; height: 215px; }
+            .nav-links { gap: 0; }
+            .nav-links a { padding: 8px 10px; font-size: 13px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================================================
+         导航栏：4 个链接分别跳转到页面里的 4 个区块（锚点）
+         href="#xxx" 对应下面 <section id="xxx">
+         ============================================================ -->
+    <header class="navbar">
+        <div class="logo">🌱 绿小植 · 养护Agent</div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="#home">首页</a></li>
+                <li><a href="#sensors">传感器台账</a></li>
+                <li><a href="#diagnosis">养护诊断</a></li>
+                <li><a href="#wiki">绿植百科</a></li>
+            </ul>
+        </nav>
+        <!-- 挂件模式按钮：点击后只保留虚拟形象（JS 里绑定事件） -->
+        <button id="btnWidget" class="widget-btn" type="button">📎 挂件模式</button>
+    </header>
+
+    <!-- ============================================================
+         首页 Hero 区
+         ============================================================ -->
+    <section id="home" class="hero">
+
+        <!-- 左侧：欢迎语 + 语音模块 -->
+        <div class="hero-text">
+            <h1>你好，我是绿小植 🌿<br>你家的绿植养护小管家</h1>
+            <p class="slogan">实时监测温湿度与光照，帮你把每一盆绿植都养得油亮健康。</p>
+
+            <!-- 语音模块：下拉框选音色 + 两个朗读按钮 -->
+            <div class="voice-panel">
+                <h2>🔊 语音小助手</h2>
+
+                <!-- 下拉框：JS 加载系统音色后，会往里面填 <option> -->
+                <select id="voiceSelect" aria-label="选择音色">
+                    <option>正在加载系统音色...</option>
+                </select>
+
+                <div class="voice-btns">
+                    <button id="btnThirsty" type="button">🔊 主人，我渴了</button>
+                    <button id="btnHungry" type="button">🔊 主人，我饿了</button>
+                </div>
+
+                <!-- ===== 定时自动播报控制条 ===== -->
+                <div class="broadcast-row">
+                    <label for="intervalInput">⏱ 间隔（秒）：</label>
+                    <!-- type="number" 让输入框只能填数字 -->
+                    <input type="number" id="intervalInput" value="30" min="5" max="3600">
+                    <!-- 开启 / 关闭播报的开关按钮（按钮文字由 JS 切换） -->
+                    <button id="btnBroadcast" class="broadcast-toggle" type="button">⏸ 关闭播报</button>
+                </div>
+                <!-- 播报状态提示（JS 会更新里面的文字） -->
+                <p class="broadcast-status" id="broadcastStatus">🟢 定时播报已开启</p>
+            </div>
+        </div>
+
+        <!-- 右侧：可互动桌宠（VRM 风格虚拟形象）
+             结构像"套娃"：7 层 div 各管一种动作，最里面是 3 张表情图
+             动作全部由 JS 控制（见脚本"桌宠引擎"部分） -->
+        <div class="hero-avatar">
+            <div class="pet-stage" id="petStage">
+
+                <!-- 第 1 层：.pet —— 位置（跟着鼠标拖动 / 提起） -->
+                <div class="pet" id="pet">
+
+                    <!-- 白色对话框（悬浮在头顶上方） -->
+                    <div class="pet-bubble" id="petBubble">
+                        <span id="petBubbleText">你好呀！</span>
+                    </div>
+
+                    <!-- 特效粒子层（爱心 ❤ / 星星 ✨ 从这里飞出来） -->
+                    <div class="pet-particles" id="petParticles"></div>
+
+                    <!-- 第 2 层：.pet-carry —— 被提起来时的左右倾斜 -->
+                    <div class="pet-carry" id="petCarry">
+
+                        <!-- 第 3 层：.pet-pose —— 姿态（歪头 / 坐下） -->
+                        <div class="pet-pose" id="petPose">
+
+                            <!-- 第 4 层：.pet-squash —— 跳跃落地的弹性 -->
+                            <div class="pet-squash" id="petSquash">
+
+                                <!-- 第 5 层：.pet-sway —— 坐下时晃腿 -->
+                                <div class="pet-sway" id="petSway">
+
+                                    <!-- 第 6 层：.pet-float —— 平时悬浮呼吸（CSS 动画常驻） -->
+                                    <div class="pet-float">
+
+                                        <!-- 第 7 层：.pet-wiggle —— 被摸 / 打招呼时的摇摆 -->
+                                        <div class="pet-wiggle" id="petWiggle">
+
+                                            <!-- 人物立牌：4 张表情图叠放，用透明度淡入淡出切换
+                                                 （第 4 张是图八的"施展魔法"立绘） -->
+                                            <div class="pet-face" id="petFace">
+                                                <img id="faceOpen"  src="open.png"  alt="睁眼" class="show">
+                                                <img id="faceBlink" src="blink.png" alt="眨眼">
+                                                <img id="faceSmile" src="smile.png" alt="微笑">
+                                                <img id="faceMagic" src="magic.png" alt="施展魔法">
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 语音输入按钮（点击后对着麦克风说话） -->
+            <button id="micBtn" class="mic-btn" type="button">🎤 和我说话</button>
+
+            <p class="pet-hint">按住我 → 提起来 ｜ 摸摸我 → 有爱心 ｜ 拖到边上坐下 ｜ 还能语音聊天哦</p>
+        </div>
+
+    </section>
+
+    <!-- ============================================================
+         传感器台账：用表格展示各传感器的当前读数
+         （这里写的是"假数据"，真实项目会从服务器 / 单片机获取）
+         ============================================================ -->
+    <section id="sensors" class="bg-white">
+        <div class="section-inner">
+            <h2 class="section-title">📡 传感器台账</h2>
+            <p class="section-subtitle">一目了然，看看家里每盆绿植的"体检数据"</p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>传感器名称</th>
+                            <th>安装位置</th>
+                            <th>当前数值</th>
+                            <th>正常范围</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>空气温湿度传感器</td>
+                            <td>客厅 · 绿萝旁</td>
+                            <td>24.5℃ / 55%</td>
+                            <td>20~28℃ / 40%~70%</td>
+                            <td><span class="badge badge-ok">正常</span></td>
+                        </tr>
+                        <tr>
+                            <td>土壤湿度传感器</td>
+                            <td>阳台 · 吊兰盆</td>
+                            <td>28%</td>
+                            <td>40%~60%</td>
+                            <td><span class="badge badge-low">偏低</span></td>
+                        </tr>
+                        <tr>
+                            <td>光照强度传感器</td>
+                            <td>阳台 · 窗台</td>
+                            <td>18000 lux</td>
+                            <td>5000~15000 lux</td>
+                            <td><span class="badge badge-high">偏高</span></td>
+                        </tr>
+                        <tr>
+                            <td>土壤湿度传感器</td>
+                            <td>书房 · 龟背竹盆</td>
+                            <td>48%</td>
+                            <td>40%~60%</td>
+                            <td><span class="badge badge-ok">正常</span></td>
+                        </tr>
+                        <tr>
+                            <td>空气温湿度传感器</td>
+                            <td>卧室 · 多肉架</td>
+                            <td>22.1℃ / 45%</td>
+                            <td>20~28℃ / 40%~70%</td>
+                            <td><span class="badge badge-ok">正常</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         养护诊断：选择症状 → 点按钮 → 显示建议
+         ============================================================ -->
+    <section id="diagnosis" class="bg-green">
+        <div class="section-inner">
+            <h2 class="section-title">🩺 养护诊断</h2>
+            <p class="section-subtitle">选择你家绿植遇到的问题，我来帮它"看病"</p>
+
+            <div class="diagnosis-box">
+                <!-- 症状下拉框：option 的 value 会作为 JS 里的查询关键词 -->
+                <select id="symptomSelect">
+                    <option value="">-- 请选择症状 --</option>
+                    <option value="yellow">叶子发黄</option>
+                    <option value="dry">叶尖干枯发脆</option>
+                    <option value="drop">大量掉叶子</option>
+                    <option value="smell">盆土有异味 / 怕烂根</option>
+                    <option value="bug">叶片上有小虫</option>
+                </select>
+
+                <button id="btnDiagnose" type="button">开始一键诊断 🌱</button>
+
+                <!-- 诊断结果：一开始 display:none，点按钮后显示 -->
+                <div class="diagnosis-result" id="diagnosisResult"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+         绿植百科：卡片列表（鼠标悬浮上浮）
+         ============================================================ -->
+    <section id="wiki" class="bg-white">
+        <div class="section-inner">
+            <h2 class="section-title">📖 绿植百科</h2>
+            <p class="section-subtitle">把鼠标放到卡片上，卡片会"跳"起来哦</p>
+
+            <div class="plant-grid">
+
+                <!-- 一张绿植卡片 -->
+                <div class="plant-card">
+                    <div class="plant-emoji">🌿</div>
+                    <h3>绿萝</h3>
+                    <p>生命力超强的"新手之友"，耐阴好养，水培土培都可以，还能净化空气。</p>
+                    <div class="plant-tags">
+                        <span class="tag">喜散射光</span>
+                        <span class="tag">一周浇 1 次</span>
+                    </div>
+                </div>
+
+                <div class="plant-card">
+                    <div class="plant-emoji">🪴</div>
+                    <h3>吊兰</h3>
+                    <p>会长出垂吊的小侧芽，适合放在高处；土壤干了再浇，避免积水烂根。</p>
+                    <div class="plant-tags">
+                        <span class="tag">半阴环境</span>
+                        <span class="tag">见干见湿</span>
+                    </div>
+                </div>
+
+                <div class="plant-card">
+                    <div class="plant-emoji">🌵</div>
+                    <h3>多肉植物</h3>
+                    <p>圆滚滚超可爱，非常耐旱。浇水宁少勿多，多晒太阳更容易出"状态色"。</p>
+                    <div class="plant-tags">
+                        <span class="tag">喜充足光照</span>
+                        <span class="tag">半月浇 1 次</span>
+                    </div>
+                </div>
+
+                <div class="plant-card">
+                    <div class="plant-emoji">🍃</div>
+                    <h3>龟背竹</h3>
+                    <p>叶片像龟背一样开裂，ins 风十足；喜欢温暖湿润，可经常给叶片喷水。</p>
+                    <div class="plant-tags">
+                        <span class="tag">喜湿润</span>
+                        <span class="tag">避免暴晒</span>
+                    </div>
+                </div>
+
+                <div class="plant-card">
+                    <div class="plant-emoji">🌱</div>
+                    <h3>虎皮兰</h3>
+                    <p>挺拔的"虎纹"叶片，极其耐旱耐阴，忘记浇水也能活得很好，懒人必备。</p>
+                    <div class="plant-tags">
+                        <span class="tag">耐旱</span>
+                        <span class="tag">忌积水</span>
+                    </div>
+                </div>
+
+                <div class="plant-card">
+                    <div class="plant-emoji">☘️</div>
+                    <h3>薄荷</h3>
+                    <p>清香扑鼻，还能泡水做饮品。生长快、爱喝水，要保持土壤微微湿润。</p>
+                    <div class="plant-tags">
+                        <span class="tag">喜光喜水</span>
+                        <span class="tag">勤修剪</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <p>🌱 绿小植 · 家庭绿植养护 Agent ｜ 纯前端演示项目（HTML + CSS + 原生 JS）</p>
+        <p>愿每一盆绿植都被温柔以待 🌿</p>
+    </footer>
+
+    <!-- 挂件模式的退出按钮：
+         平时隐藏（CSS 里 display:none），
+         进入挂件模式后才显示在右上角 -->
+    <button id="btnWidgetExit" class="widget-exit-btn" type="button">✕ 退出挂件模式</button>
+
+
+    <!-- ============================================================
+         JavaScript 部分
+         注意：<script> 放在 </body> 之前，
+         这样写脚本时页面元素已经存在，不用再等 DOM 加载
+         ============================================================ -->
+    <script>
+        /* ============================================================
+           功能一：VRM 风格桌宠引擎（可互动虚拟人物）
+           ------------------------------------------------------------
+           小知识：真正的 VRM 是一种 3D 人物模型文件（.vrm），
+           需要 three.js 这样的 3D 引擎才能加载。
+           本项目用"2D 表情图 + 分层 CSS 动画 + 物理跟随"模拟出
+           桌宠的互动体验，效果上是同一件事：
+             · 白色对话框聊天    · 提起 / 摸摸 / 坐下             · 歪头看你（自我意识）
+             · 打招呼 / 施魔法 / 咖啡邀请（待机动作）  · 麦克风语音互动
+           ------------------------------------------------------------
+           目录：
+             1-1 获取元素 & 表情淡入淡出切换
+             1-2 白色对话框 say() + 丰富台词库
+             1-3 一次性动画 & 粒子特效（爱心 / 星星）
+             1-4 人物行为动作库（打招呼 / 歪头 / 魔法 / 咖啡……）
+             1-5 鼠标交互：提起 · 摸摸 · 坐下 · 点按
+             1-6 自我意识：自动眨眼 + 随机待机动作
+           ============================================================ */
+
+        /* ---------- 1-1 获取元素 & 表情切换 ---------- */
+        var petStage      = document.getElementById('petStage');
+        var pet           = document.getElementById('pet');
+        var petCarry      = document.getElementById('petCarry');
+        var petPose       = document.getElementById('petPose');
+        var petSquash     = document.getElementById('petSquash');
+        var petSway       = document.getElementById('petSway');
+        var petWiggle     = document.getElementById('petWiggle');
+        var petFace       = document.getElementById('petFace');
+        var faceOpen      = document.getElementById('faceOpen');
+        var faceBlink     = document.getElementById('faceBlink');
+        var faceSmile     = document.getElementById('faceSmile');
+        var faceMagic     = document.getElementById('faceMagic');   // 图八：施展魔法立绘
+        var petBubble     = document.getElementById('petBubble');
+        var petBubbleText = document.getElementById('petBubbleText');
+        var petParticles  = document.getElementById('petParticles');
+        var micBtn        = document.getElementById('micBtn');
+
+        // 交互状态（先统一声明，逻辑各处共用）
+        var pressing        = false;   // 鼠标是否按在人物上
+        var isSitting       = false;   // 是否正坐在底边上
+        var isMagicking     = false;   // 是否正在施展魔法（防止别的动作打断）
+        var faceState       = 'open';  // 当前表情：open / blink / smile / magic
+        var smileTimer      = null;    // "0.3 秒后变微笑"的延时器
+        var holdTimer       = null;    // "按住一会说台词"的延时器
+        var faceBackTimer   = null;    // "表情恢复睁眼"的延时器
+        var sitShakeTimer   = null;    // 坐下时摇头循环的计时器
+        var bubbleTimer     = null;    // 对话框自动隐藏的延时器
+        var pettedCooldown  = 0;       // 摸摸特效的冷却时间戳
+
+        // 位置：pos = 当前位置，target = 想去的位置（每帧靠近一点）
+        var pos    = { x: 0, y: 0 };
+        var target = { x: 0, y: 0 };
+        var grabDX = 0, grabDY = 0;    // 抓取点与人物左上角的偏移量
+        var movedDist = 0;             // 本次按下总共移动了多少（区分点按/拖拽）
+        var strokeAcc = 0;             // "摸摸"的累积移动距离
+        var pressTime = 0;             // 按下时刻（判断是不是"点一下"）
+
+        // 图片预加载：先存进浏览器缓存，切换表情才不会闪白
+        var imgPre1 = new Image(); imgPre1.src = 'open.png';
+        var imgPre2 = new Image(); imgPre2.src = 'blink.png';
+        var imgPre3 = new Image(); imgPre3.src = 'smile.png';
+        var imgPre4 = new Image(); imgPre4.src = 'magic.png';
+
+        // 表情切换：四张图叠放，给对应图加 show 类 = 淡入显示
+        function setFace(name) {
+            faceState = name;
+            faceOpen.classList.toggle('show',  name === 'open');
+            faceBlink.classList.toggle('show', name === 'blink');
+            faceSmile.classList.toggle('show', name === 'smile');
+            faceMagic.classList.toggle('show', name === 'magic');
+        }
+
+        // 过一会儿把表情恢复成"睁眼"
+        function backToNormalFace(ms) {
+            if (faceBackTimer !== null) clearTimeout(faceBackTimer);
+            faceBackTimer = setTimeout(function () {
+                // 施法中不抢表情，等魔法动作自己收尾
+                if (!pressing && !isSitting && !isMagicking) setFace('open');
+            }, ms || 2000);
+        }
+
+        // 鼠标悬浮在人物上：先眨眼，0.3 秒后微笑（保留最初的交互规则）
+        petFace.addEventListener('mouseenter', function () {
+            if (isMagicking) return;   // 施法中不切表情，魔法立绘才完整
+            setFace('blink');
+            if (smileTimer !== null) clearTimeout(smileTimer);
+            smileTimer = setTimeout(function () {
+                setFace('smile');
+                smileTimer = null;
+            }, 300);
+        });
+
+        petFace.addEventListener('mouseleave', function () {
+            if (smileTimer !== null) {
+                clearTimeout(smileTimer);
+                smileTimer = null;
+            }
+            // 正被提起 / 摸摸 / 施法时保持当前表情，不急着变回睁眼
+            if (!pressing && !isMagicking) setFace('open');
+        });
+
+
+        /* ---------- 1-2 白色对话框 + 台词库 ---------- */
+        function say(text, ms) {
+            petBubbleText.textContent = text;
+            petBubble.classList.add('show');
+            if (bubbleTimer !== null) clearTimeout(bubbleTimer);
+            bubbleTimer = setTimeout(function () {
+                petBubble.classList.remove('show');
+            }, ms || 3200);
+        }
+
+        // 从数组里随机挑一句（Math.random 是 0~1 的小数）
+        function pick(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        // ★ 丰富台词库：贴合"家庭绿植养护"场景，想加句子直接往数组里补
+        var petPhrases = {
+            hello: [
+                '你好呀！', '见到你好开心！', '主人好呀～今天也要元气满满！'
+            ],
+            love: [
+                '主人，我好爱你啊！', '最喜欢主人啦！', '有主人在，每天都甜甜的～'
+            ],
+            hug: [
+                '主人，抱抱嘛！', '要抱抱～', '抱一下嘛，就一下下！'
+            ],
+            thirsty: [
+                '主人，我渴啦！', '口渴了…想喝水水～', '主人，我渴啦，记得也给绿萝浇浇水哦！'
+            ],
+            hungry: [
+                '主人，我饿啦！', '肚子咕咕叫了…', '想吃小饼干了，主人～'
+            ],
+            care: [
+                '今天记得给绿萝浇水哦～',
+                '阳台的多肉今天晒太阳了吗？',
+                '土壤湿度 28%，吊兰想喝水啦！',
+                '给叶子擦擦灰，会更油亮哦～',
+                '中午光照太强，多肉要遮阴呀！',
+                '开窗通风一下，植物更精神哦！',
+                '薄荷长得好快，可以摘几片泡水啦～'
+            ],
+            held: [
+                '哇！要带我去哪里呀？', '好高好高～', '主人要带我去看绿植吗？',
+                '唔…别把我摔了哦！', '起飞咯～'
+            ],
+            sitting: [
+                '坐在这里看风景～', '晃晃小腿，真舒服～',
+                '主人忙你的，我坐着等你～', '这里的视野真好呀！'
+            ],
+            petted: [
+                '好舒服～再摸摸！', '嘿嘿，好开心！', '主人的手好暖～',
+                '还要还要～', '被摸摸头，好幸福！'
+            ],
+            magic: [
+                '✨看我的小魔法！绿植快快长！', '✨变变变！', '✨魔法能量充满啦！'
+            ],
+            coffee: [
+                '主人，来杯咖啡吗？☕', '休息一下，喝点东西吧～', '☕ 咖啡时间到！'
+            ],
+            idle: [
+                '嗯？你在看我吗？', '今天也要加油哦！', '有点想吃小饼干了…',
+                '阳光真好～', '主人在忙什么呢？'
+            ]
+        };
+
+
+        /* ---------- 1-3 一次性动画 & 粒子特效 ---------- */
+        // 播放一次性动画的小工具：
+        //   先 remove 类名 → 读一次 offsetWidth 强迫浏览器"重绘" → 再 add 类名
+        //   这样同一个动画可以连续播放多次（不加这三步，第二次播放会没反应）
+        function playAnim(el, cls) {
+            el.classList.remove(cls);
+            void el.offsetWidth;   // void：表示"这个值我不要，只是借用它的副作用"
+            el.classList.add(cls);
+        }
+
+        // 动画播完自动移除类名，下次 playAnim 才能再播
+        petWiggle.addEventListener('animationend', function (e) {
+            e.target.classList.remove('anim-wiggle', 'anim-shake');
+        });
+        petSquash.addEventListener('animationend', function (e) {
+            e.target.classList.remove('anim-squash', 'anim-jump');
+        });
+
+        // 生成爱心：从人物身上飘出来（摸摸时的回应）
+        function spawnHearts(n) {
+            for (var i = 0; i < n; i++) {
+                var h = document.createElement('span');
+                h.className = 'fx-heart';
+                h.textContent = '❤';
+                // 随机位置 + 随机延迟，看起来更自然（不整齐才可爱）
+                h.style.left = (15 + Math.random() * 70) + '%';
+                h.style.top  = (10 + Math.random() * 45) + '%';
+                h.style.animationDelay = (Math.random() * 0.3) + 's';
+                petParticles.appendChild(h);
+                // 2 秒后把自己从页面上删掉，避免粒子越积越多
+                (function (node) {
+                    setTimeout(function () {
+                        if (node.parentNode) node.parentNode.removeChild(node);
+                    }, 2000);
+                })(h);
+            }
+        }
+
+        // 生成魔法星星：向四周飞散（CSS 自定义变量 --dx/--dy 控制方向）
+        function spawnSparks(n) {
+            for (var i = 0; i < n; i++) {
+                var s = document.createElement('span');
+                s.className = 'fx-spark';
+                s.textContent = '✨';
+                s.style.left = (30 + Math.random() * 40) + '%';
+                s.style.top  = (25 + Math.random() * 35) + '%';
+
+                // 用三角函数算随机方向：角度 0~2π，距离 55~120 像素
+                var angle = Math.random() * Math.PI * 2;
+                var dist  = 55 + Math.random() * 65;
+                s.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+                s.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+
+                petParticles.appendChild(s);
+                (function (node) {
+                    setTimeout(function () {
+                        if (node.parentNode) node.parentNode.removeChild(node);
+                    }, 1600);
+                })(s);
+            }
+        }
+
+
+        /* ---------- 1-4 人物行为动作库 ---------- */
+
+        // 打招呼（图一 / 图八）：摇摆 + 笑脸 + 台词
+        function doWave() {
+            playAnim(petWiggle, 'anim-wiggle');
+            setFace('smile');
+            say(pick(petPhrases.hello));
+            backToNormalFace(1800);
+        }
+
+        // 歪头看屏幕外的你（图二：自我意识）—— 姿态层用 transition 平滑转过去
+        function doTiltHead() {
+            petPose.classList.add('is-tilt');
+            say('嗯？你在看我吗？');
+            setTimeout(function () {
+                petPose.classList.remove('is-tilt');
+            }, 1700);
+        }
+
+        // 施展魔法（图八）：换上"魔法立绘" + 缓缓升空 + 光环呼吸 + 星星四散
+        // 动作为什么丝滑？因为每一步都交给 CSS 过渡 / 关键帧完成：
+        //   1) 表情 0.45s 淡入"施展魔法"立绘（不闪图）
+        //   2) 姿态层用 0.5s 回弹曲线平滑升起 22px（不瞬移）
+        //   3) 立牌柔光持续呼吸 + 分两波撒星星（不僵硬）
+        //   4) 2.2s 后同样平滑落回、淡回睁眼表情（无缝衔接）
+        function doMagic() {
+            if (isMagicking) return;   // 正在施法就不再叠加，防止动作打架
+            isMagicking = true;
+
+            setFace('magic');                           // 淡入图八魔法立绘
+            playAnim(petWiggle, 'anim-wiggle');         // 起手轻轻一摇
+            petPose.classList.add('is-magic-levitate'); // 平滑升空
+            petFace.classList.add('is-magic');          // 柔光呼吸
+            spawnSparks(10);                            // 第一波星星
+            say(pick(petPhrases.magic), 3000);
+
+            // 0.8 秒后补第二波星星，"魔法能量"持续迸发
+            setTimeout(function () {
+                spawnSparks(8);
+            }, 800);
+
+            // 2.2 秒后收功：平滑落下 → 熄光 → 淡回睁眼
+            setTimeout(function () {
+                petPose.classList.remove('is-magic-levitate'); // 慢慢落回原位
+                petFace.classList.remove('is-magic');
+                isMagicking = false;
+                backToNormalFace(700);
+            }, 2200);
+        }
+
+        // 咖啡邀请（图十）
+        function doCoffee() {
+            playAnim(petWiggle, 'anim-wiggle');
+            setFace('smile');
+            say(pick(petPhrases.coffee));
+            backToNormalFace(2200);
+        }
+
+        // 跳一下（待机伸展 / 语音指令都能用）
+        function doJump() {
+            playAnim(petSquash, 'anim-jump');
+        }
+
+        // 被摸摸的开心反应：爱心 + 摇摆 + 笑脸
+        function doPetted() {
+            spawnHearts(3);
+            playAnim(petWiggle, 'anim-wiggle');
+            setFace('smile');
+            say(pick(petPhrases.petted), 2500);
+            backToNormalFace(2500);
+        }
+
+        // 坐下时偶尔摇头（图五要求的"自我意识小动作"）
+        function doShake() {
+            playAnim(petWiggle, 'anim-shake');
+        }
+
+
+        /* ---------- 1-5 鼠标交互：提起 · 摸摸 · 坐下 · 点按 ---------- */
+
+        // 把人物位置限制在舞台范围内，防止拖出界再也找不回来
+        function clampToStage(x, y) {
+            var w  = pet.offsetWidth,  h  = pet.offsetHeight;
+            var sw = petStage.clientWidth, sh = petStage.clientHeight;
+            return {
+                x: Math.max(0, Math.min(sw - w, x)),
+                y: Math.max(-20, Math.min(sh - h + 30, y))
+            };
+        }
+
+        // 人物初始位置：舞台水平居中
+        function resetPetPosition() {
+            var p = clampToStage((petStage.clientWidth - pet.offsetWidth) / 2, 40);
+            target.x = p.x; target.y = p.y;
+            pos.x    = p.x; pos.y    = p.y;
+        }
+        resetPetPosition();
+
+        // ★★ 平滑跟随循环 —— 动作丝滑不卡的核心 ★★
+        //    人物每帧只向目标位置靠近 22%（这叫"缓动 / lerp"），
+        //    所以移动像被弹簧拉着走，绝不是瞬间瞬移的 PPT 效果。
+        //    倾斜角根据移动速度实时计算：拎得越快，身子越歪。
+        function petLoop() {
+            pos.x += (target.x - pos.x) * 0.22;
+            pos.y += (target.y - pos.y) * 0.22;
+
+            var vx = target.x - pos.x;
+            var tilt = Math.max(-12, Math.min(12, vx * 0.35)); // 限制最大歪 12 度
+            petCarry.style.transform = 'rotate(' + tilt + 'deg)';
+
+            // translate3d 走显卡加速通道，比改 left/top 更流畅
+            pet.style.transform = 'translate3d(' + pos.x + 'px,' + pos.y + 'px,0)';
+            requestAnimationFrame(petLoop);   // 每一帧都继续循环
+        }
+        requestAnimationFrame(petLoop);
+
+        // 鼠标按下：开始"提起 / 摸摸"手势
+        petFace.addEventListener('mousedown', function (e) {
+            e.preventDefault();             // 防止浏览器选中图片/文字
+            pressing = true;
+            movedDist = 0;
+            strokeAcc = 0;
+            pressTime = Date.now();
+            pet.classList.add('is-dragging');
+
+            standUp();                      // 如果正坐着，先站起来
+
+            // 计算抓取偏移：按在人物哪个位置，就一直拎着那个位置
+            var rect = petStage.getBoundingClientRect();
+            grabDX = e.clientX - rect.left - pos.x;
+            grabDY = e.clientY - rect.top  - pos.y;
+
+            // 按住 0.35 秒 → "提起来"台词（图三）
+            holdTimer = setTimeout(function () {
+                if (pressing) {
+                    setFace('smile');
+                    say(pick(petPhrases.held));
+                }
+            }, 350);
+        });
+
+        // 鼠标移动：监听"整个窗口"，鼠标移出人物也能继续拖
+        window.addEventListener('mousemove', function (e) {
+            if (!pressing) return;
+            var rect = petStage.getBoundingClientRect();
+            var nx = e.clientX - rect.left - grabDX;
+            var ny = e.clientY - rect.top  - grabDY;
+
+            // 累积移动距离：用来判断是"提起走路"还是"原地摸摸"
+            var dist = Math.abs(nx - target.x) + Math.abs(ny - target.y);
+            movedDist += dist;
+            strokeAcc += dist;
+
+            // ★ 摸摸判定（图六）：按住不放来回滑动 → 飘爱心
+            //   800ms 冷却：防止爱心刷屏
+            if (strokeAcc > 90 && Date.now() - pettedCooldown > 800) {
+                strokeAcc = 0;
+                pettedCooldown = Date.now();
+                spawnHearts(2);
+                if (!isMagicking) setFace('smile');   // 施法中保留魔法立绘
+                playAnim(petWiggle, 'anim-wiggle');
+                if (Math.random() < 0.5) say(pick(petPhrases.petted), 2200);
+            }
+
+            var p = clampToStage(nx, ny);
+            target.x = p.x;
+            target.y = p.y;
+        });
+
+        // 鼠标松开：判断是"坐下 / 落地 / 点按"
+        window.addEventListener('mouseup', function () {
+            if (!pressing) return;
+            pressing = false;
+            pet.classList.remove('is-dragging');
+            if (holdTimer !== null) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+
+            var pressDuration = Date.now() - pressTime;
+
+            // 情况 A：几乎没动 = 点按 → 随机小反应（歪头 / 打招呼 / 弹一下）
+            if (movedDist < 8 && pressDuration < 350) {
+                var r = Math.random();
+                if (r < 0.3)       doTiltHead();
+                else if (r < 0.6)  doWave();
+                else if (r < 0.8) { playAnim(petSquash, 'anim-squash'); say(pick(petPhrases.idle)); }
+                else               doPetted();
+                return;
+            }
+
+            // 情况 B：拖到舞台底部 → 坐在"下框边"上（图五）
+            if (target.y > petStage.clientHeight - pet.offsetHeight - 30) {
+                sitDown();
+            } else {
+                // 情况 C：普通落地 → 弹性压一下 + 偶尔说句话
+                playAnim(petSquash, 'anim-squash');
+                if (Math.random() < 0.4) say(pick(petPhrases.idle), 2200);
+                backToNormalFace(1500);
+            }
+        });
+
+        // 坐下：贴住底边 + 晃小腿（CSS 循环动画）+ 偶尔摇头
+        function sitDown() {
+            isSitting = true;
+            petPose.classList.add('is-sitting');
+            petSway.classList.add('is-sitting');
+            setFace('smile');
+            say(pick(petPhrases.sitting));
+
+            var p = clampToStage(pos.x, petStage.clientHeight - pet.offsetHeight + 24);
+            target.x = p.x;
+            target.y = p.y;
+
+            // 坐着时每隔几秒随机摇头 / 说话 / 歪头 —— "有自我意识"的感觉
+            sitShakeTimer = setInterval(function () {
+                var r = Math.random();
+                if (r < 0.5)       doShake();
+                else if (r < 0.8)  say(pick(petPhrases.sitting), 2600);
+                else               doTiltHead();
+            }, 4500);
+        }
+
+        // 站起来（再次按下人物时调用）
+        function standUp() {
+            if (!isSitting) return;
+            isSitting = false;
+            petPose.classList.remove('is-sitting');
+            petSway.classList.remove('is-sitting');
+            if (sitShakeTimer !== null) {
+                clearInterval(sitShakeTimer);
+                sitShakeTimer = null;
+            }
+        }
+
+
+        /* ---------- 1-6 自我意识：自动眨眼 + 随机待机动作 ---------- */
+
+        // 自动眨眼：每 3.8 秒眨一次（只有"睁眼"状态才眨，防止打断其他表情）
+        setInterval(function () {
+            if (faceState !== 'open' || pressing) return;
+            setFace('blink');
+            setTimeout(function () {
+                if (faceState === 'blink') setFace('open');
+            }, 150);
+        }, 3800);
+
+        // ★ 随机待机动作：像有"自我意识"一样自己找事做
+        //   每 8~16 秒随机表演一个（图一打招呼 / 图二歪头 / 图八魔法 /
+        //   图十咖啡 / 图九伸展跳跃，或提醒你养护绿植）
+        function scheduleIdle() {
+            var wait = 8000 + Math.random() * 8000;
+            setTimeout(function () {
+                if (!pressing) {          // 只在玩家没操作时表演
+                    var r = Math.random();
+                    if (isSitting) {
+                        // 坐着的时候：摇头 / 歪头 / 说话
+                        if (r < 0.4)       doShake();
+                        else if (r < 0.7)  doTiltHead();
+                        else               say(pick(petPhrases.idle));
+                    } else {
+                        if (r < 0.22)      doTiltHead();                 // 歪头看你（图二）
+                        else if (r < 0.42) doWave();                     // 打招呼（图一）
+                        else if (r < 0.58) doMagic();                    // 施展魔法（图八）
+                        else if (r < 0.72) doCoffee();                   // 咖啡邀请（图十）
+                        else if (r < 0.86) { doJump(); say(pick(petPhrases.idle)); } // 伸展（图九）
+                        else               say(pick(petPhrases.care), 3000);         // 养护提醒
+                    }
+                }
+                scheduleIdle();           // 排下一次待机（递归形成循环）
+            }, wait);
+        }
+        scheduleIdle();
+
+        // 刚打开页面：主动打招呼，像个活的小家伙
+        setTimeout(function () {
+            say('你好呀！我是绿小植～');
+        }, 600);
+
+
+        /* ============================================================
+           功能二：语音模块（Web Speech API）
+           说明：
+             window.speechSynthesis 是浏览器内置的"朗读器"，
+             不需要联网、不需要任何第三方库，Chrome / Edge 都支持。
+           ============================================================ */
+
+        // 1. 获取浏览器的语音合成对象
+        var synth = window.speechSynthesis;
+
+        // 2. 找到页面上的下拉框和两个按钮
+        var voiceSelect = document.getElementById('voiceSelect');
+        var btnThirsty  = document.getElementById('btnThirsty');
+        var btnHungry   = document.getElementById('btnHungry');
+
+        // 3. 兼容性判断：极少数老浏览器可能不支持语音合成
+        if (!('speechSynthesis' in window)) {
+            voiceSelect.innerHTML = '<option>当前浏览器不支持语音合成</option>';
+            voiceSelect.disabled = true;
+            btnThirsty.disabled = true;
+            btnHungry.disabled = true;
+        }
+
+        // 4. 把系统里可用的音色，填进下拉框
+        function loadVoices() {
+            var voices = synth.getVoices(); // 获取系统音色列表（数组）
+
+            // 如果一个音色都没有（浏览器可能还在加载中），直接返回
+            if (voices.length === 0) {
+                return;
+            }
+
+            // 先清空下拉框里的旧内容
+            voiceSelect.innerHTML = '';
+
+            for (var i = 0; i < voices.length; i++) {
+                var v = voices[i];
+
+                // 创建一个 <option> 并设置显示文字，例如：
+                // "Microsoft Xiaoxiao (zh-CN)"
+                var option = document.createElement('option');
+                option.value = v.name; // value 存音色名字，后面要用它找回音色对象
+                option.textContent = v.name + ' (' + v.lang + ')';
+
+                voiceSelect.appendChild(option);
+            }
+
+            // 小优化：默认优先选中中文（zh）音色，读中文更自然
+            for (var j = 0; j < voices.length; j++) {
+                if (voices[j].lang.indexOf('zh') !== -1) {
+                    voiceSelect.value = voices[j].name;
+                    break;
+                }
+            }
+        }
+
+        // 5. 重要！很多浏览器的音色列表是"异步加载"的：
+        //    页面刚打开时 getVoices() 可能返回空数组，
+        //    等系统音色加载好后会触发 voiceschanged 事件，这时再填一次。
+        loadVoices(); // 先试着加载一次（有的浏览器这里就能拿到）
+        if ('onvoiceschanged' in synth) {
+            synth.addEventListener('voiceschanged', loadVoices); // 加载好了再填
+        }
+
+        // 6. 朗读函数：传入要读的文字
+        function speak(text) {
+
+            // speak 会排队朗读，所以先 cancel() 停掉正在读的内容，
+            // 这样连续点按钮不会出现"两句话叠在一起说"
+            synth.cancel();
+
+            // 创建一个"朗读请求"对象
+            var utter = new SpeechSynthesisUtterance(text);
+
+            // 根据下拉框选中的名字，找回对应的音色对象
+            var voices = synth.getVoices();
+            var selectedName = voiceSelect.value;
+            for (var i = 0; i < voices.length; i++) {
+                if (voices[i].name === selectedName) {
+                    utter.voice = voices[i]; // 应用音色
+                    break;
+                }
+            }
+
+            utter.lang = 'zh-CN'; // 朗读语言：简体中文
+            utter.rate = 0.9;     // ★ 语速 0.9（1 为正常语速，小于 1 会更慢更温柔）
+
+            // 让浏览器开始朗读
+            synth.speak(utter);
+        }
+
+        // 7. 给两个按钮绑定点击事件
+        btnThirsty.addEventListener('click', function () {
+            speak('主人，我渴了');
+        });
+
+        btnHungry.addEventListener('click', function () {
+            speak('主人，我饿了');
+        });
+
+
+        /* ============================================================
+           功能三：养护诊断（点按钮 → 查表 → 显示建议）
+           这里用"对象字面量"当一张小字典：
+             key（键）   = 下拉框 option 的 value
+             value（值） = 对应的诊断建议文字
+           ============================================================ */
+
+        // 1. 症状与建议的对照表（以后想加新症状，直接在这里加一行就行）
+        var diagnosisMap = {
+            yellow: '诊断：叶子发黄，多半是浇水过多或缺少光照。<br>建议：先检查盆土是否积水，把绿植移到散射光充足的地方，黄叶及时剪掉，一周左右观察新叶情况。',
+            dry:   '诊断：叶尖干枯发脆，通常是空气太干燥或缺水。<br>建议：用喷壶给叶片周围喷雾增湿，浇水要"浇则浇透"，同时远离空调出风口和暖气片。',
+            drop:  '诊断：大量掉叶子，可能是温度骤变、通风不良或刚换环境。<br>建议：把绿植放在温度稳定、通风的位置，短期内不要施肥，让它慢慢缓苗适应。',
+            smell: '诊断：盆土有异味，很可能是浇水太多导致烂根！<br>建议：立刻停止浇水，把绿植脱盆检查根系，剪掉发黑发软的烂根，换上疏松透气的新土重新栽种。',
+            bug:   '诊断：叶片上有小虫，常见的是蚜虫或红蜘蛛。<br>建议：先用清水冲洗叶片正反面，虫害严重时使用低毒杀虫剂，并与其他绿植隔离开防止传染。'
+        };
+
+        // 2. 找到相关元素
+        var symptomSelect   = document.getElementById('symptomSelect');
+        var btnDiagnose     = document.getElementById('btnDiagnose');
+        var diagnosisResult = document.getElementById('diagnosisResult');
+
+        // 3. 绑定"开始诊断"按钮的点击事件
+        btnDiagnose.addEventListener('click', function () {
+
+            // 拿到当前选中的症状值，例如 "yellow"
+            var key = symptomSelect.value;
+
+            // 如果用户还没选症状，弹窗提醒
+            if (key === '') {
+                alert('请先选择一个症状哦～');
+                return; // return：让函数到此结束，后面代码不再执行
+            }
+
+            // 用 key 去字典里查建议，显示到结果框里
+            diagnosisResult.innerHTML = diagnosisMap[key];
+            diagnosisResult.style.display = 'block'; // 显示结果框
+        });
+
+
+        /* ============================================================
+           功能四：定时自动语音播报
+           效果：每隔一段时间，随机朗读"主人，我渴了"或"主人，我饿了"
+           亮点：
+             1. 页面加载后自动开始播报
+             2. 间隔时间可以在输入框里自己设置（单位：秒）
+             3. 有开关按钮，可以随时开启 / 关闭
+           ============================================================ */
+
+        // 1. 找到相关元素
+        var intervalInput   = document.getElementById('intervalInput');   // 间隔输入框
+        var btnBroadcast    = document.getElementById('btnBroadcast');    // 开关按钮
+        var broadcastStatus = document.getElementById('broadcastStatus'); // 状态提示
+
+        // 2. 播报内容（一个数组，存两句话，每次随机挑一句）
+        var broadcastTexts = ['主人，我渴了', '主人，我饿了'];
+
+        // 3. 两个"开关"变量
+        var isBroadcasting = false;  // 是否正在定时播报（true = 开，false = 关）
+        var broadcastTimer = null;   // setTimeout 的返回值，用来取消还没到点的播报
+
+        // 4. 小工具函数：读取用户设置的间隔秒数，并做"保护"
+        //    用户可能输入 0、负数或乱填，这里统一兜底到合法范围
+        function getIntervalSeconds() {
+            var sec = parseInt(intervalInput.value, 10); // 把输入框内容转成整数
+            if (isNaN(sec)) { sec = 30; }     // 完全不是数字 → 默认 30 秒
+            if (sec < 5)    { sec = 5; }      // 最小 5 秒，避免播报太频繁
+            if (sec > 3600) { sec = 3600; }   // 最大 1 小时
+            return sec;
+        }
+
+        // 5. 排好"下一次"播报（用 setTimeout 递归调用自己，形成循环）
+        //    为什么不用 setInterval？因为用户可能中途改间隔，
+        //    用 setTimeout 每次重新读取间隔，改完下一次就生效，更灵活。
+        function scheduleNextBroadcast() {
+            // 如果播报已关闭，就不再排下一次（递归的"出口"，防止停不下来）
+            if (!isBroadcasting) {
+                return;
+            }
+
+            // setTimeout(要做的事, 等待的毫秒数)
+            broadcastTimer = setTimeout(function () {
+
+                // 随机挑一句话：
+                // Math.random() 生成 0~1 的小数，乘以 2 后向下取整 = 0 或 1
+                var index = Math.floor(Math.random() * broadcastTexts.length);
+
+                // 调用功能二写好的 speak()，语速同样是 0.9
+                speak(broadcastTexts[index]);
+
+                // 这次读完，再排下一次 —— 于是形成"无限循环播报"
+                scheduleNextBroadcast();
+
+            }, getIntervalSeconds() * 1000); // 秒 → 毫秒（×1000）
+        }
+
+        // 6. 开启播报
+        function startBroadcast() {
+            isBroadcasting = true;
+            btnBroadcast.textContent = '⏸ 关闭播报'; // 按钮文字变成"关闭"
+            broadcastStatus.textContent = '🟢 定时播报已开启，每 ' + getIntervalSeconds() + ' 秒随机说一句';
+            scheduleNextBroadcast(); // 排第一次播报
+        }
+
+        // 7. 关闭播报
+        function stopBroadcast() {
+            isBroadcasting = false;
+
+            // clearTimeout 取消还没到点的那次播报（很关键！）
+            if (broadcastTimer !== null) {
+                clearTimeout(broadcastTimer);
+                broadcastTimer = null;
+            }
+
+            btnBroadcast.textContent = '▶ 开启播报'; // 按钮文字变成"开启"
+            broadcastStatus.textContent = '🔴 定时播报已关闭';
+        }
+
+        // 8. 开关按钮：点一下切换 开 / 关
+        btnBroadcast.addEventListener('click', function () {
+            if (isBroadcasting) {
+                stopBroadcast();
+            } else {
+                startBroadcast();
+            }
+        });
+
+        // 9. 用户修改间隔后：如果正在播报，就按新间隔重新排一次，
+        //    这样不用关掉再开就能生效
+        intervalInput.addEventListener('change', function () {
+            if (isBroadcasting) {
+                if (broadcastTimer !== null) {
+                    clearTimeout(broadcastTimer);
+                }
+                broadcastStatus.textContent = '🟢 定时播报已开启，每 ' + getIntervalSeconds() + ' 秒随机说一句';
+                scheduleNextBroadcast();
+            }
+        });
+
+        // 10. ★ 页面加载后自动启动定时播报
+        //     注意：多数浏览器有"自动播放声音"限制，
+        //     刚打开页面就说话可能被浏览器拦住。
+        //     解决小技巧：监听用户"第一次点击页面"，点过之后声音就正常了。
+        startBroadcast();
+
+        // 用户第一次点击页面时，重新启动一次播报（相当于"解锁"浏览器声音）
+        document.addEventListener('click', function unlockVoice() {
+            if (isBroadcasting) {
+                // cancel 后重新 speak 一次空操作不可行，
+                // 简单做法：直接把下一次播报提前到现在（立即说一句）
+                var index = Math.floor(Math.random() * broadcastTexts.length);
+                speak(broadcastTexts[index]);
+            }
+            // removeEventListener：解锁只需要一次，之后不用再监听
+            document.removeEventListener('click', unlockVoice);
+        });
+
+
+        /* ============================================================
+           功能五：挂件模式
+           效果：点"挂件模式"按钮后，
+             · 隐藏导航栏、绿植卡片、传感器台账等全部其他内容
+             · 只保留虚拟形象
+             · 页面背景变透明（适合做桌面挂件）
+           原理：往 <body> 上添加 / 删除 widget-mode 类名，
+                 具体"隐藏谁、透明谁"全交给 CSS（见样式第 10 部分），
+                 JS 只负责切换类名 —— 这叫"行为与样式分离"。
+           ============================================================ */
+
+        // 1. 找到两个按钮
+        var btnWidget      = document.getElementById('btnWidget');      // 导航栏里的"挂件模式"
+        var btnWidgetExit  = document.getElementById('btnWidgetExit');  // 右上角的"退出挂件模式"
+
+        // 2. 点"挂件模式"：给 body 和 html 加上 widget-mode 类
+        btnWidget.addEventListener('click', function () {
+            document.body.classList.add('widget-mode');
+            document.documentElement.classList.add('widget-mode'); // html 也加，背景才能透明
+
+            // 桌宠视角：舞台突然变大了，把人物挪回中间并打个招呼
+            setTimeout(function () {
+                resetPetPosition();
+                say('挂件模式启动！拖着我到处走吧～', 3000);
+            }, 60);
+        });
+
+        // 3. 点"退出挂件模式"：把类删掉，页面恢复原样
+        btnWidgetExit.addEventListener('click', function () {
+            document.body.classList.remove('widget-mode');
+            document.documentElement.classList.remove('widget-mode');
+
+            // 回到普通网页：让坐着的桌宠站起来、回到卡片里
+            setTimeout(function () {
+                standUp();
+                resetPetPosition();
+                say('回来啦～', 2000);
+            }, 60);
+        });
+
+
+        /* ============================================================
+           功能六：麦克风语音输入互动
+           说明：
+             SpeechRecognition 是浏览器内置的"语音识别器"，
+             你对着麦克风说话，它会自动转成文字（zh-CN 中文）。
+             桌宠收到文字后，只用【动作 + 对话框文字】回应，
+             不再朗读出来 —— 像真正的桌宠一样"看"你说话。
+           注意：
+             · Chrome / Edge 支持最好（需要 https 或 localhost 或 file 一般也行）
+             · 第一次点按钮，浏览器会弹窗询问麦克风权限，要选"允许"
+             · 说完一句话后识别会自动停下来，想继续聊就再点一次按钮
+           ============================================================ */
+
+        // 1. 浏览器兼容：Chrome 内核叫 webkitSpeechRecognition
+        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var recognition = null;   // 识别器对象（后面创建）
+        var isRecognizing = false;
+
+        // 2. 语音回复规则表：把"听到的关键词"映射到"桌宠反应"
+        //    规则：从上往下找，谁先匹配到就执行谁（所以更具体的词放上面）
+        var voiceRules = [
+            { keys: ['浇水', '喷水'],      act: 'care',    reply: '好嘞！我提醒主人：绿萝土干 2cm 再浇，浇则浇透哦～' },
+            { keys: ['渴', '口渴'],        act: 'thirsty', reply: '主人，我渴啦！' },
+            { keys: ['饿', '肚子饿'],      act: 'hungry',  reply: '主人，我饿啦！' },
+            { keys: ['爱你', '喜欢你'],    act: 'love',    reply: '主人，我好爱你啊！' },
+            { keys: ['抱'],               act: 'hug',     reply: '主人，抱抱嘛！' },
+            { keys: ['摸'],               act: 'pet',     reply: '好舒服～还要摸摸！' },
+            { keys: ['你好', '您好', '嗨', '哈喽'], act: 'wave',  reply: '你好呀！见到你真开心～' },
+            { keys: ['笑'],               act: 'joke',    reply: '' },   // 空字符串 = 用台词库里的笑话
+            { keys: ['魔法', '变'],        act: 'magic',   reply: '✨看我的小魔法！绿植快快长！' },
+            { keys: ['跳'],               act: 'jump',    reply: '看我跳得高不高！' },
+            { keys: ['转', '跳舞'],        act: 'dance',   reply: '转个圈圈～' },
+            { keys: ['喝', '咖啡'],        act: 'coffee',  reply: '主人，来杯咖啡吗？☕' },
+            { keys: ['植物', '绿植', '花', '绿萝', '多肉', '吊兰'], act: 'care', reply: '' },
+            { keys: ['名字', '叫什么'],    act: 'wave',    reply: '我叫绿小植，是你的绿植小管家哦！' },
+            { keys: ['再见', '拜拜', '晚安'], act: 'wave',  reply: '主人再见～我会想你的！' }
+        ];
+
+        // 3. 创建识别器并配置（如果浏览器支持的话）
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'zh-CN';            // 识别中文
+            recognition.continuous = false;        // 说一句就自动停（省电、不打扰）
+            recognition.interimResults = false;    // 只要最终结果，不要半成品
+
+            // 识别成功：拿到文字，交给"关键词匹配"处理
+            recognition.onresult = function (event) {
+                var text = event.results[0][0].transcript;
+                handleVoiceText(text);
+            };
+
+            // 识别结束（不管成功失败）：恢复按钮样子
+            recognition.onend = function () {
+                isRecognizing = false;
+                micBtn.classList.remove('is-listening');
+                micBtn.textContent = '🎤 和我说话';
+            };
+
+            // 识别出错：没听清 / 没给权限，友好提示
+            recognition.onerror = function () {
+                say('唔…没听清，再说一次好不好？');
+            };
+        }
+
+        // 4. 点麦克风按钮：开始 / 停止识别
+        micBtn.addEventListener('click', function () {
+            if (!recognition) {
+                say('这个浏览器不支持语音识别，换个 Chrome 或 Edge 试试～', 3500);
+                return;
+            }
+
+            if (isRecognizing) {
+                recognition.stop();   // 正在听 → 点一下停
+                return;
+            }
+
+            isRecognizing = true;
+            micBtn.classList.add('is-listening');   // 按钮发光 + 跳动
+            micBtn.textContent = '🔴 正在听…（点我停下）';
+            say('嗯嗯，我在听～主人请讲！', 2800);
+            recognition.start();
+        });
+
+        // 5. 拿到你说的文字后：找关键词 → 做动作 + 气泡回复
+        function handleVoiceText(text) {
+            // 先在气泡里"回显"你说的话，证明它真的听见了
+            say('「' + text + '」', 2000);
+
+            // 0.9 秒后桌宠再做出回应（节奏感：先看再说，像在思考）
+            setTimeout(function () {
+                respondToVoice(text);
+            }, 900);
+        }
+
+        function respondToVoice(text) {
+            // 逐条规则找关键词
+            for (var i = 0; i < voiceRules.length; i++) {
+                var rule = voiceRules[i];
+                for (var j = 0; j < rule.keys.length; j++) {
+                    if (text.indexOf(rule.keys[j]) !== -1) {
+                        doVoiceAction(rule.act, rule.reply);
+                        return;   // 匹配到一条就够了
+                    }
+                }
+            }
+
+            // 什么都没匹配到：歪头 + 可爱的万能回复
+            doTiltHead();
+            setTimeout(function () {
+                say('唔…这个我还听不太懂，不过主人说什么都好听！', 3200);
+            }, 700);
+        }
+
+        // 6. 动作分发器：一个函数统一管理"语音 → 动作"的对应关系
+        function doVoiceAction(act, reply) {
+            // 先做动作（动作本身就是回应的一部分）
+            if (act === 'wave')         doWave();
+            else if (act === 'love')  { spawnHearts(5); setFace('smile'); playAnim(petWiggle, 'anim-wiggle'); }
+            else if (act === 'hug')   { playAnim(petSquash, 'anim-squash'); spawnHearts(3); setFace('smile'); }
+            else if (act === 'pet')     doPetted();
+            else if (act === 'thirsty') { playAnim(petWiggle, 'anim-wiggle'); setFace('blink'); }
+            else if (act === 'hungry')  { playAnim(petSquash, 'anim-squash'); }
+            else if (act === 'care')    doTiltHead();
+            else if (act === 'joke')    doMagic();
+            else if (act === 'magic')   doMagic();
+            else if (act === 'jump')    doJump();
+            else if (act === 'dance')   doWave();
+            else if (act === 'coffee')  doCoffee();
+
+            // 再用气泡说话（reply 为空 → 从台词库随机挑）
+            setTimeout(function () {
+                if (reply && reply.length > 0) {
+                    say(reply, 3400);
+                } else if (act === 'joke') {
+                    // 给"讲笑话"准备的植物冷笑话（想加就往数组里补）
+                    var jokes = [
+                        '为什么绿萝从来不迷路？因为它总能找到"光"的方向！',
+                        '多肉为什么这么胖？因为它把水都喝到肚子里存着啦！',
+                        '吊兰说：我虽然叫"吊"兰，但我从来不迟到！',
+                        '植物开会，谁没来？含羞草 —— 它害羞请假了！'
+                    ];
+                    say(pick(jokes), 4200);
+                } else {
+                    say(pick(petPhrases.care), 3400);
+                }
+            }, 650);
+        }
+
+    </script>
+
+</body>
+</html>
